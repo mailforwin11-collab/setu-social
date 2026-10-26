@@ -1,14 +1,24 @@
 import { useState } from 'react';
-import { useDiscourse } from '../../hooks/useDiscourse';
+import { useSetu } from '../../hooks/useDiscourse';
+import VistaarView from '../vistaar/VistaarView';
 
 export default function DesktopLayout() {
-  const { mode, toggleMode, isAwaaz, charLimit, displayedPosts, addPost, likePost } = useDiscourse();
+  const {
+    activePillar,
+    setActivePillar,
+    vistaarTab,
+    setVistaarTab,
+    awaazPosts,
+    vistaarItems,
+    addAwaazPost,
+    likeAwaaz,
+  } = useSetu();
+
   const [postText, setPostText] = useState('');
-  const [activeNav, setActiveNav] = useState<'feed' | 'adda' | 'activity' | 'profile'>('feed');
   const [feedFilter, setFeedFilter] = useState<'latest' | 'curated'>('latest');
 
-  const handlePublish = () => {
-    addPost(postText);
+  const handlePublishAwaaz = () => {
+    addAwaazPost(postText);
     setPostText('');
   };
 
@@ -27,26 +37,26 @@ export default function DesktopLayout() {
 
           <nav className="sidebar-nav-group">
             <button
-              className={`sidebar-nav-item ${activeNav === 'feed' ? 'active' : ''}`}
-              onClick={() => setActiveNav('feed')}
+              className={`sidebar-nav-item ${activePillar === 'awaaz' ? 'active' : ''}`}
+              onClick={() => setActivePillar('awaaz')}
             >
-              <span>◈</span> Discourse
+              <span>◈</span> Awaaz <small style={{ color: 'var(--text-dim)', marginLeft: 'auto' }}>Text</small>
             </button>
             <button
-              className={`sidebar-nav-item ${activeNav === 'adda' ? 'active' : ''}`}
-              onClick={() => setActiveNav('adda')}
+              className={`sidebar-nav-item ${activePillar === 'vistaar' ? 'active' : ''}`}
+              onClick={() => setActivePillar('vistaar')}
+            >
+              <span>▣</span> Vistaar <small style={{ color: 'var(--text-dim)', marginLeft: 'auto' }}>Media</small>
+            </button>
+            <button
+              className={`sidebar-nav-item ${activePillar === 'adda' ? 'active' : ''}`}
+              onClick={() => setActivePillar('adda')}
             >
               <span>◇</span> Adda
             </button>
             <button
-              className={`sidebar-nav-item ${activeNav === 'activity' ? 'active' : ''}`}
-              onClick={() => setActiveNav('activity')}
-            >
-              <span>○</span> Alerts
-            </button>
-            <button
-              className={`sidebar-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveNav('profile')}
+              className={`sidebar-nav-item ${activePillar === 'profile' ? 'active' : ''}`}
+              onClick={() => setActivePillar('profile')}
             >
               <span>△</span> Profile
             </button>
@@ -62,37 +72,25 @@ export default function DesktopLayout() {
         </div>
       </aside>
 
-      {/* 2. Center Column: Main Stream */}
+      {/* 2. Center Column */}
       <main className="main-feed-column">
         <header className="feed-top-header">
           <div className="brand-wrapper">
             <div className="brand-badge">S</div>
             <div>
               <span className="brand-title">Setu</span>
-              <span className="brand-sub">. {isAwaaz ? 'Awaaz' : 'Vistar'}</span>
+              <span className="brand-sub">. {activePillar === 'awaaz' ? 'Awaaz (Discourse)' : 'Vistaar (Visuals)'}</span>
             </div>
           </div>
-
-          <button className="mode-toggle-btn" onClick={toggleMode} title="Toggle Mode">
-            <span>⇄</span>
-            <span>{isAwaaz ? 'Awaaz' : 'Vistar'}</span>
-            <span className="mode-badge-tag">{isAwaaz ? 'आवाज़' : 'विस्तार'}</span>
-          </button>
         </header>
 
-        {activeNav === 'feed' && (
+        {/* --- Awaaz (Twitter View) --- */}
+        {activePillar === 'awaaz' && (
           <>
             <section className="section-header">
-              <span className="category-tag">{isAwaaz ? 'Micro Discourse' : 'Long-form Essays'}</span>
-              <h1 className="main-title">
-                {isAwaaz ? 'Awaaz' : 'Vistar'}{' '}
-                <span className="hindi-title">{isAwaaz ? 'आवाज़' : 'विस्तार'}</span>
-              </h1>
-              <p className="subtitle">
-                {isAwaaz
-                  ? 'Ideas deserve a place to be heard.'
-                  : 'Unabridged essays, deep commentary, and long reads.'}
-              </p>
+              <span className="category-tag">Public Discourse</span>
+              <h1 className="main-title">Awaaz <span className="hindi-title">आवाज़</span></h1>
+              <p className="subtitle">Ideas, hypotheses, and sharp opinions.</p>
             </section>
 
             <div className="tabs-container">
@@ -100,7 +98,7 @@ export default function DesktopLayout() {
                 className={`tab-btn ${feedFilter === 'latest' ? 'active' : ''}`}
                 onClick={() => setFeedFilter('latest')}
               >
-                Chronological
+                Latest (Chronological)
               </button>
               <button
                 className={`tab-btn ${feedFilter === 'curated' ? 'active' : ''}`}
@@ -110,47 +108,42 @@ export default function DesktopLayout() {
               </button>
             </div>
 
+            {/* Twitter-style Composer */}
             <div className="composer-box">
               <textarea
                 className="composer-textarea"
-                rows={isAwaaz ? 3 : 6}
-                placeholder={
-                  isAwaaz
-                    ? "What's on your mind? Share an observation..."
-                    : 'Draft your thesis or long-form essay...'
-                }
+                rows={3}
+                placeholder="What's your hypothesis or observation?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                maxLength={charLimit}
+                maxLength={600}
               />
               <div className="composer-footer">
-                <span className="char-counter">{postText.length}/{charLimit}</span>
+                <span className="char-counter">{postText.length}/600</span>
                 <button
                   className="btn-silhouette"
-                  onClick={handlePublish}
+                  onClick={handlePublishAwaaz}
                   disabled={!postText.trim()}
                 >
-                  Publish {isAwaaz ? 'Awaaz' : 'Essay'} ↗
+                  Post Awaaz ↗
                 </button>
               </div>
             </div>
 
+            {/* Awaaz Post Stream */}
             <div className="feed-container">
-              {displayedPosts.map((post) => (
+              {awaazPosts.map((post) => (
                 <article key={post.id} className="post-card">
                   <div className="post-card-header">
                     <div className="post-avatar">{post.author.charAt(0)}</div>
                     <div className="post-meta">
                       <span className="post-author">{post.author}</span>
                       <span className="post-handle">{post.handle} · {post.timestamp}</span>
-                      <span className="post-id-badge">{post.postIdCode}</span>
                     </div>
                   </div>
-                  <p className="post-content" style={{ whiteSpace: 'pre-wrap' }}>
-                    {post.content}
-                  </p>
+                  <p className="post-content">{post.content}</p>
                   <div className="post-actions">
-                    <button className="action-btn-silhouette" onClick={() => likePost(post.id)}>
+                    <button className="action-btn-silhouette" onClick={() => likeAwaaz(post.id)}>
                       <span>♡</span> {post.likes}
                     </button>
                     <button className="action-btn-silhouette"><span>↻</span> {post.reposts}</button>
@@ -162,7 +155,25 @@ export default function DesktopLayout() {
           </>
         )}
 
-        {activeNav === 'adda' && (
+        {/* --- Vistaar (Instagram/Media View) --- */}
+        {activePillar === 'vistaar' && (
+          <>
+            <section className="section-header">
+              <span className="category-tag">Visual Discovery</span>
+              <h1 className="main-title">Vistaar <span className="hindi-title">विस्तार</span></h1>
+              <p className="subtitle">Shorts, long-form videos, and photo galleries.</p>
+            </section>
+
+            <VistaarView
+              items={vistaarItems}
+              currentTab={vistaarTab}
+              onTabChange={setVistaarTab}
+            />
+          </>
+        )}
+
+        {/* --- Adda --- */}
+        {activePillar === 'adda' && (
           <section className="section-header">
             <span className="category-tag">Public Commons</span>
             <h1 className="main-title">Adda <span className="hindi-title">अड्डा</span></h1>
@@ -170,15 +181,8 @@ export default function DesktopLayout() {
           </section>
         )}
 
-        {activeNav === 'activity' && (
-          <section className="section-header">
-            <span className="category-tag">Notifications</span>
-            <h1 className="main-title">Activity</h1>
-            <p className="subtitle">Mentions, likes, and interactions on your discourse.</p>
-          </section>
-        )}
-
-        {activeNav === 'profile' && (
+        {/* --- Profile --- */}
+        {activePillar === 'profile' && (
           <section className="section-header">
             <span className="category-tag">Identity</span>
             <h1 className="main-title">Profile</h1>
@@ -193,7 +197,7 @@ export default function DesktopLayout() {
         )}
       </main>
 
-      {/* 3. Right Rail: Context & Circles */}
+      {/* 3. Right Rail */}
       <aside className="desktop-aside">
         <div className="aside-card">
           <div className="aside-title">Active Adda Circles</div>
@@ -211,13 +215,6 @@ export default function DesktopLayout() {
             </div>
             <button className="action-btn-silhouette">Join</button>
           </div>
-        </div>
-
-        <div className="aside-card">
-          <div className="aside-title">Discourse Philosophy</div>
-          <p style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
-            Setu prioritizes focused reasoning. Use <strong>Vistar</strong> for deep dives and <strong>Awaaz</strong> for concise arguments.
-          </p>
         </div>
       </aside>
     </div>
