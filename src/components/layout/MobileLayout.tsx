@@ -12,12 +12,21 @@ export default function MobileLayout() {
     vistaarItems,
     addAwaazPost,
     likeAwaaz,
+    likeVistaar,
   } = useSetu();
 
   const [postText, setPostText] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState<'stream' | 'adda' | 'activity' | 'profile'>('stream');
+
+  const isAwaaz = activePillar === 'awaaz';
+
+  const toggleFeedMode = () => {
+    setActivePillar(isAwaaz ? 'vistaar' : 'awaaz');
+  };
 
   const handlePublish = () => {
+    if (!postText.trim()) return;
     addAwaazPost(postText);
     setPostText('');
     setIsModalOpen(false);
@@ -25,72 +34,87 @@ export default function MobileLayout() {
 
   return (
     <div style={{ minHeight: '100vh', padding: '0 16px 80px', maxWidth: 600, margin: '0 auto' }}>
-      {/* Mobile Top Header */}
+      {/* Mobile Top Header with In-Place Switcher */}
       <header className="feed-top-header">
         <div className="brand-wrapper">
           <div className="brand-badge">S</div>
           <div>
             <span className="brand-title">Setu</span>
-            <span className="brand-sub">. {activePillar === 'awaaz' ? 'Awaaz' : 'Vistaar'}</span>
+            <span className="brand-sub">. {isAwaaz ? 'Awaaz' : 'Vistaar'}</span>
           </div>
         </div>
+
+        {/* The Fast Toggle Switch */}
+        <button className="mode-toggle-btn" onClick={toggleFeedMode}>
+          <span>⇄ {isAwaaz ? 'Awaaz' : 'Vistaar'}</span>
+        </button>
+
+        <button className="top-ping-btn" title="Direct Pings">
+          <span>⚡</span>
+        </button>
       </header>
 
-      {/* --- Awaaz (Twitter feed) --- */}
-      {activePillar === 'awaaz' && (
+      {/* Main Stream View */}
+      {activeNav === 'stream' && (
         <>
-          <section className="section-header">
-            <span className="category-tag">Public Discourse</span>
-            <h1 className="main-title">Awaaz <span className="hindi-title">आवाज़</span></h1>
-            <p className="subtitle">Ideas deserve a place to be heard.</p>
-          </section>
+          {isAwaaz ? (
+            <>
+              <section className="section-header">
+                <span className="category-tag">Public Discourse</span>
+                <h1 className="main-title">Awaaz <span className="hindi-title">आवाज़</span></h1>
+                <p className="subtitle">Ideas deserve a place to be heard.</p>
+              </section>
 
-          <div className="feed-container">
-            {awaazPosts.map((post) => (
-              <article key={post.id} className="post-card">
-                <div className="post-card-header">
-                  <div className="post-avatar">{post.author.charAt(0)}</div>
-                  <div className="post-meta">
-                    <span className="post-author">{post.author}</span>
-                    <span className="post-handle">{post.handle} · {post.timestamp}</span>
-                  </div>
-                </div>
-                <p className="post-content">{post.content}</p>
-                <div className="post-actions">
-                  <button className="action-btn-silhouette" onClick={() => likeAwaaz(post.id)}>
-                    <span>♡</span> {post.likes}
-                  </button>
-                  <button className="action-btn-silhouette"><span>↻</span> {post.reposts}</button>
-                  <button className="action-btn-silhouette"><span>💬</span> {post.replies}</button>
-                </div>
-              </article>
-            ))}
-          </div>
+              <div className="feed-container">
+                {awaazPosts.map((post) => (
+                  <article key={post.id} className="post-card">
+                    <div className="post-card-header">
+                      <div className="post-avatar">{post.author.charAt(0)}</div>
+                      <div className="post-meta">
+                        <span className="post-author">{post.author}</span>
+                        <span className="post-handle">{post.handle} · {post.timestamp}</span>
+                      </div>
+                    </div>
+                    <p className="post-content">{post.content}</p>
+                    <div className="post-actions">
+                      <button
+                        className="action-btn-silhouette"
+                        onClick={() => likeAwaaz(post.id)}
+                        style={{ color: post.liked ? '#f43f5e' : 'inherit' }}
+                      >
+                        <span>{post.liked ? '♥' : '♡'}</span> {post.likes}
+                      </button>
+                      <button className="action-btn-silhouette"><span>↻</span> {post.reposts}</button>
+                      <button className="action-btn-silhouette"><span>💬</span> {post.replies}</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
 
-          <button className="fab-silhouette" onClick={() => setIsModalOpen(true)}>
-            +
-          </button>
+              <button className="fab-silhouette" onClick={() => setIsModalOpen(true)}>
+                +
+              </button>
+            </>
+          ) : (
+            <>
+              <section className="section-header">
+                <span className="category-tag">Visual Discovery</span>
+                <h1 className="main-title">Vistaar <span className="hindi-title">विस्तार</span></h1>
+              </section>
+
+              <VistaarView
+                items={vistaarItems}
+                currentTab={vistaarTab}
+                onTabChange={setVistaarTab}
+                onLike={likeVistaar}
+              />
+            </>
+          )}
         </>
       )}
 
-      {/* --- Vistaar (Instagram feed) --- */}
-      {activePillar === 'vistaar' && (
-        <>
-          <section className="section-header">
-            <span className="category-tag">Visuals</span>
-            <h1 className="main-title">Vistaar <span className="hindi-title">विस्तार</span></h1>
-          </section>
-
-          <VistaarView
-            items={vistaarItems}
-            currentTab={vistaarTab}
-            onTabChange={setVistaarTab}
-          />
-        </>
-      )}
-
-      {/* --- Adda --- */}
-      {activePillar === 'adda' && (
+      {/* Adda Section */}
+      {activeNav === 'adda' && (
         <section className="section-header">
           <span className="category-tag">Public Commons</span>
           <h1 className="main-title">Adda <span className="hindi-title">अड्डा</span></h1>
@@ -98,8 +122,8 @@ export default function MobileLayout() {
         </section>
       )}
 
-      {/* --- Profile --- */}
-      {activePillar === 'profile' && (
+      {/* Profile Section */}
+      {activeNav === 'profile' && (
         <section className="section-header">
           <span className="category-tag">Identity</span>
           <h1 className="main-title">Profile</h1>
@@ -149,32 +173,32 @@ export default function MobileLayout() {
         </div>
       )}
 
-      {/* Mobile Bottom Navigation Bar: Twitter (Awaaz) & Instagram (Vistaar) */}
+      {/* Fixed Bottom Navigation */}
       <nav className="mobile-bottom-nav">
         <button
-          className={`nav-item-silhouette ${activePillar === 'awaaz' ? 'active' : ''}`}
-          onClick={() => setActivePillar('awaaz')}
+          className={`nav-item-silhouette ${activeNav === 'stream' ? 'active' : ''}`}
+          onClick={() => setActiveNav('stream')}
         >
           <span>◈</span>
-          <span>Awaaz</span>
+          <span>Feed</span>
         </button>
         <button
-          className={`nav-item-silhouette ${activePillar === 'vistaar' ? 'active' : ''}`}
-          onClick={() => setActivePillar('vistaar')}
-        >
-          <span>▣</span>
-          <span>Vistaar</span>
-        </button>
-        <button
-          className={`nav-item-silhouette ${activePillar === 'adda' ? 'active' : ''}`}
-          onClick={() => setActivePillar('adda')}
+          className={`nav-item-silhouette ${activeNav === 'adda' ? 'active' : ''}`}
+          onClick={() => setActiveNav('adda')}
         >
           <span>◇</span>
           <span>Adda</span>
         </button>
         <button
-          className={`nav-item-silhouette ${activePillar === 'profile' ? 'active' : ''}`}
-          onClick={() => setActivePillar('profile')}
+          className={`nav-item-silhouette ${activeNav === 'activity' ? 'active' : ''}`}
+          onClick={() => setActiveNav('activity')}
+        >
+          <span>○</span>
+          <span>Alerts</span>
+        </button>
+        <button
+          className={`nav-item-silhouette ${activeNav === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveNav('profile')}
         >
           <span>△</span>
           <span>Profile</span>

@@ -12,12 +12,21 @@ export default function DesktopLayout() {
     vistaarItems,
     addAwaazPost,
     likeAwaaz,
+    likeVistaar,
   } = useSetu();
 
   const [postText, setPostText] = useState('');
   const [feedFilter, setFeedFilter] = useState<'latest' | 'curated'>('latest');
+  const [activeNav, setActiveNav] = useState<'stream' | 'adda' | 'activity' | 'profile'>('stream');
+
+  const isAwaaz = activePillar === 'awaaz';
+
+  const toggleFeedMode = () => {
+    setActivePillar(isAwaaz ? 'vistaar' : 'awaaz');
+  };
 
   const handlePublishAwaaz = () => {
+    if (!postText.trim()) return;
     addAwaazPost(postText);
     setPostText('');
   };
@@ -37,26 +46,26 @@ export default function DesktopLayout() {
 
           <nav className="sidebar-nav-group">
             <button
-              className={`sidebar-nav-item ${activePillar === 'awaaz' ? 'active' : ''}`}
-              onClick={() => setActivePillar('awaaz')}
+              className={`sidebar-nav-item ${activeNav === 'stream' ? 'active' : ''}`}
+              onClick={() => setActiveNav('stream')}
             >
-              <span>◈</span> Awaaz <small style={{ color: 'var(--text-dim)', marginLeft: 'auto' }}>Text</small>
+              <span>◈</span> Feed
             </button>
             <button
-              className={`sidebar-nav-item ${activePillar === 'vistaar' ? 'active' : ''}`}
-              onClick={() => setActivePillar('vistaar')}
-            >
-              <span>▣</span> Vistaar <small style={{ color: 'var(--text-dim)', marginLeft: 'auto' }}>Media</small>
-            </button>
-            <button
-              className={`sidebar-nav-item ${activePillar === 'adda' ? 'active' : ''}`}
-              onClick={() => setActivePillar('adda')}
+              className={`sidebar-nav-item ${activeNav === 'adda' ? 'active' : ''}`}
+              onClick={() => setActiveNav('adda')}
             >
               <span>◇</span> Adda
             </button>
             <button
-              className={`sidebar-nav-item ${activePillar === 'profile' ? 'active' : ''}`}
-              onClick={() => setActivePillar('profile')}
+              className={`sidebar-nav-item ${activeNav === 'activity' ? 'active' : ''}`}
+              onClick={() => setActiveNav('activity')}
+            >
+              <span>○</span> Alerts
+            </button>
+            <button
+              className={`sidebar-nav-item ${activeNav === 'profile' ? 'active' : ''}`}
+              onClick={() => setActiveNav('profile')}
             >
               <span>△</span> Profile
             </button>
@@ -74,106 +83,126 @@ export default function DesktopLayout() {
 
       {/* 2. Center Column */}
       <main className="main-feed-column">
+        {/* Header with the Old-Style Toggle Switch */}
         <header className="feed-top-header">
           <div className="brand-wrapper">
             <div className="brand-badge">S</div>
             <div>
               <span className="brand-title">Setu</span>
-              <span className="brand-sub">. {activePillar === 'awaaz' ? 'Awaaz (Discourse)' : 'Vistaar (Visuals)'}</span>
+              <span className="brand-sub">. {isAwaaz ? 'Awaaz' : 'Vistaar'}</span>
             </div>
           </div>
+
+          {/* Quick Header Switcher */}
+          <button 
+            className="mode-toggle-btn" 
+            onClick={toggleFeedMode}
+            title="Toggle Discourse vs Visual Content"
+          >
+            <span>⇄ Switch to {isAwaaz ? 'Vistaar' : 'Awaaz'}</span>
+            <span className="mode-badge-tag">{isAwaaz ? 'आवाज़' : 'विस्तार'}</span>
+          </button>
+
+          <button className="top-ping-btn" title="Direct Pings">
+            <span>⚡</span>
+          </button>
         </header>
 
-        {/* --- Awaaz (Twitter View) --- */}
-        {activePillar === 'awaaz' && (
+        {activeNav === 'stream' && (
           <>
-            <section className="section-header">
-              <span className="category-tag">Public Discourse</span>
-              <h1 className="main-title">Awaaz <span className="hindi-title">आवाज़</span></h1>
-              <p className="subtitle">Ideas, hypotheses, and sharp opinions.</p>
-            </section>
+            {/* When Awaaz is Active */}
+            {isAwaaz ? (
+              <>
+                <section className="section-header">
+                  <span className="category-tag">Public Discourse</span>
+                  <h1 className="main-title">Awaaz <span className="hindi-title">आवाज़</span></h1>
+                  <p className="subtitle">Ideas, arguments, and sharp observations.</p>
+                </section>
 
-            <div className="tabs-container">
-              <button
-                className={`tab-btn ${feedFilter === 'latest' ? 'active' : ''}`}
-                onClick={() => setFeedFilter('latest')}
-              >
-                Latest (Chronological)
-              </button>
-              <button
-                className={`tab-btn ${feedFilter === 'curated' ? 'active' : ''}`}
-                onClick={() => setFeedFilter('curated')}
-              >
-                Curated
-              </button>
-            </div>
+                <div className="tabs-container">
+                  <button
+                    className={`tab-btn ${feedFilter === 'latest' ? 'active' : ''}`}
+                    onClick={() => setFeedFilter('latest')}
+                  >
+                    Latest
+                  </button>
+                  <button
+                    className={`tab-btn ${feedFilter === 'curated' ? 'active' : ''}`}
+                    onClick={() => setFeedFilter('curated')}
+                  >
+                    Curated
+                  </button>
+                </div>
 
-            {/* Twitter-style Composer */}
-            <div className="composer-box">
-              <textarea
-                className="composer-textarea"
-                rows={3}
-                placeholder="What's your hypothesis or observation?"
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-                maxLength={600}
-              />
-              <div className="composer-footer">
-                <span className="char-counter">{postText.length}/600</span>
-                <button
-                  className="btn-silhouette"
-                  onClick={handlePublishAwaaz}
-                  disabled={!postText.trim()}
-                >
-                  Post Awaaz ↗
-                </button>
-              </div>
-            </div>
-
-            {/* Awaaz Post Stream */}
-            <div className="feed-container">
-              {awaazPosts.map((post) => (
-                <article key={post.id} className="post-card">
-                  <div className="post-card-header">
-                    <div className="post-avatar">{post.author.charAt(0)}</div>
-                    <div className="post-meta">
-                      <span className="post-author">{post.author}</span>
-                      <span className="post-handle">{post.handle} · {post.timestamp}</span>
-                    </div>
-                  </div>
-                  <p className="post-content">{post.content}</p>
-                  <div className="post-actions">
-                    <button className="action-btn-silhouette" onClick={() => likeAwaaz(post.id)}>
-                      <span>♡</span> {post.likes}
+                <div className="composer-box">
+                  <textarea
+                    className="composer-textarea"
+                    rows={3}
+                    placeholder="Share a hypothesis, question, or opinion..."
+                    value={postText}
+                    onChange={(e) => setPostText(e.target.value)}
+                    maxLength={600}
+                  />
+                  <div className="composer-footer">
+                    <span className="char-counter">{postText.length}/600</span>
+                    <button
+                      className="btn-silhouette"
+                      onClick={handlePublishAwaaz}
+                      disabled={!postText.trim()}
+                    >
+                      Post ↗
                     </button>
-                    <button className="action-btn-silhouette"><span>↻</span> {post.reposts}</button>
-                    <button className="action-btn-silhouette"><span>💬</span> {post.replies}</button>
                   </div>
-                </article>
-              ))}
-            </div>
+                </div>
+
+                <div className="feed-container">
+                  {awaazPosts.map((post) => (
+                    <article key={post.id} className="post-card">
+                      <div className="post-card-header">
+                        <div className="post-avatar">{post.author.charAt(0)}</div>
+                        <div className="post-meta">
+                          <span className="post-author">{post.author}</span>
+                          <span className="post-handle">{post.handle} · {post.timestamp}</span>
+                        </div>
+                      </div>
+                      <p className="post-content">{post.content}</p>
+                      <div className="post-actions">
+                        <button
+                          className="action-btn-silhouette"
+                          onClick={() => likeAwaaz(post.id)}
+                          style={{ color: post.liked ? '#f43f5e' : 'inherit' }}
+                        >
+                          <span>{post.liked ? '♥' : '♡'}</span> {post.likes}
+                        </button>
+                        <button className="action-btn-silhouette"><span>↻</span> {post.reposts}</button>
+                        <button className="action-btn-silhouette"><span>💬</span> {post.replies}</button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
+            ) : (
+              /* When Vistaar is Active */
+              <>
+                <section className="section-header">
+                  <span className="category-tag">Visual Discovery</span>
+                  <h1 className="main-title">Vistaar <span className="hindi-title">विस्तार</span></h1>
+                  <p className="subtitle">Shorts, long-form videos, and photo galleries.</p>
+                </section>
+
+                <VistaarView
+                  items={vistaarItems}
+                  currentTab={vistaarTab}
+                  onTabChange={setVistaarTab}
+                  onLike={likeVistaar}
+                />
+              </>
+            )}
           </>
         )}
 
-        {/* --- Vistaar (Instagram/Media View) --- */}
-        {activePillar === 'vistaar' && (
-          <>
-            <section className="section-header">
-              <span className="category-tag">Visual Discovery</span>
-              <h1 className="main-title">Vistaar <span className="hindi-title">विस्तार</span></h1>
-              <p className="subtitle">Shorts, long-form videos, and photo galleries.</p>
-            </section>
-
-            <VistaarView
-              items={vistaarItems}
-              currentTab={vistaarTab}
-              onTabChange={setVistaarTab}
-            />
-          </>
-        )}
-
-        {/* --- Adda --- */}
-        {activePillar === 'adda' && (
+        {/* Adda View */}
+        {activeNav === 'adda' && (
           <section className="section-header">
             <span className="category-tag">Public Commons</span>
             <h1 className="main-title">Adda <span className="hindi-title">अड्डा</span></h1>
@@ -181,8 +210,8 @@ export default function DesktopLayout() {
           </section>
         )}
 
-        {/* --- Profile --- */}
-        {activePillar === 'profile' && (
+        {/* Profile View */}
+        {activeNav === 'profile' && (
           <section className="section-header">
             <span className="category-tag">Identity</span>
             <h1 className="main-title">Profile</h1>
