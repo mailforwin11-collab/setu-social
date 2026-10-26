@@ -1,99 +1,180 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export type Mode = 'awaaz' | 'vistar';
+export type Pillar = "awaaz" | "vistaar" | "adda" | "profile";
+export type VistaarFormat = "shorts" | "videos" | "photos";
 
-export interface Post {
+export interface AwaazPost {
   id: string;
-  mode: Mode;
   author: string;
   handle: string;
-  postIdCode: string;
   content: string;
   timestamp: string;
   likes: number;
   reposts: number;
   replies: number;
+  liked?: boolean;
 }
 
-const DEFAULT_POSTS: Post[] = [
+export interface VistaarItem {
+  id: string;
+  format: VistaarFormat;
+  creator: string;
+  handle: string;
+  title: string;
+  mediaUrl: string;
+  thumbnailUrl?: string;
+  caption: string;
+  views: number;
+  likes: number;
+  comments: number;
+  liked?: boolean;
+}
+
+const DEFAULT_AWAAZ: AwaazPost[] = [
   {
-    id: '1',
-    mode: 'awaaz',
-    author: 'Kabir Shah',
-    handle: '@kabircreates',
-    postIdCode: 'ID: ST-AWA-20261017-0812',
-    content: 'A small reminder: changing your mind after learning new verified information is strength, not defeat.',
-    timestamp: '1 day ago',
+    id: "a1",
+    author: "Kabir Shah",
+    handle: "@kabircreates",
+    content: "A small reminder: changing your mind after learning new verified information is strength, not defeat.",
+    timestamp: "1h ago",
     likes: 47,
     reposts: 8,
-    replies: 0,
+    replies: 12,
   },
   {
-    id: '2',
-    mode: 'vistar',
-    author: 'Aarav Sharma',
-    handle: '@aarav_code',
-    postIdCode: 'ID: ST-VIS-20261016-0419',
-    content: 'On Architectural Restraint: In software, minimalism is not the absence of features, but the elimination of accidental friction. When designing interfaces for discourse, fewer dials yield sharper clarity.',
-    timestamp: '2 days ago',
-    likes: 62,
-    reposts: 14,
-    replies: 5,
+    id: "a2",
+    author: "Aarav Sharma",
+    handle: "@aarav_code",
+    content: "Software minimalism is not the absence of features, but the elimination of accidental friction.",
+    timestamp: "4h ago",
+    likes: 89,
+    reposts: 19,
+    replies: 7,
   }
 ];
 
-export function useDiscourse() {
-  const [mode, setMode] = useState<Mode>(() => {
-    return (localStorage.getItem('setu_current_mode') as Mode) || 'awaaz';
+const DEFAULT_VISTAAR: VistaarItem[] = [
+  {
+    id: "v1",
+    format: "shorts",
+    creator: "Maya Lin",
+    handle: "@mayadesign",
+    title: "Kinetic Typography in CSS",
+    mediaUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80",
+    caption: "Exploring micro-interactions with pure CSS transforms #design #minimalism",
+    views: 1420,
+    likes: 312,
+    comments: 24,
+  },
+  {
+    id: "v2",
+    format: "videos",
+    creator: "Rohan Mehta",
+    handle: "@rohan_film",
+    title: "The Silent Architecture of Mumbai (Documentary)",
+    mediaUrl: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=1200&q=80",
+    thumbnailUrl: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=1200&q=80",
+    caption: "A 14-minute visual essay through stone corridors and sea breezes.",
+    views: 8900,
+    likes: 1240,
+    comments: 88,
+  },
+  {
+    id: "v3",
+    format: "photos",
+    creator: "Isha Patel",
+    handle: "@ishashots",
+    title: "Monochrome Reflections",
+    mediaUrl: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1000&q=80",
+    caption: "Rain patterns on glass, Thane station at dusk.",
+    views: 3400,
+    likes: 540,
+    comments: 31,
+  }
+];
+
+export function useSetu() {
+  const [activePillar, setActivePillar] = useState<Pillar>("awaaz");
+  const [vistaarTab, setVistaarTab] = useState<VistaarFormat>("shorts");
+
+  const [awaazPosts, setAwaazPosts] = useState<AwaazPost[]>(() => {
+    try {
+      const saved = localStorage.getItem("setu_awaaz_v2");
+      return saved ? JSON.parse(saved) : DEFAULT_AWAAZ;
+    } catch {
+      return DEFAULT_AWAAZ;
+    }
   });
 
-  const [posts, setPosts] = useState<Post[]>(() => {
-    const saved = localStorage.getItem('setu_posts');
-    return saved ? JSON.parse(saved) : DEFAULT_POSTS;
+  const [vistaarItems, setVistaarItems] = useState<VistaarItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("setu_vistaar_v2");
+      return saved ? JSON.parse(saved) : DEFAULT_VISTAAR;
+    } catch {
+      return DEFAULT_VISTAAR;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('setu_posts', JSON.stringify(posts));
-  }, [posts]);
+    localStorage.setItem("setu_awaaz_v2", JSON.stringify(awaazPosts));
+  }, [awaazPosts]);
 
   useEffect(() => {
-    localStorage.setItem('setu_current_mode', mode);
-  }, [mode]);
+    localStorage.setItem("setu_vistaar_v2", JSON.stringify(vistaarItems));
+  }, [vistaarItems]);
 
-  const toggleMode = () => {
-    setMode((prev) => (prev === 'awaaz' ? 'vistar' : 'awaaz'));
-  };
-
-  const addPost = (content: string) => {
+  const addAwaazPost = (content: string) => {
     if (!content.trim()) return;
-    const newPost: Post = {
+    const post: AwaazPost = {
       id: Date.now().toString(),
-      mode,
-      author: 'Parth Jadhav',
-      handle: '@parth',
-      postIdCode: `ID: ST-${mode === 'awaaz' ? 'AWA' : 'VIS'}-${Date.now().toString().slice(-8)}`,
+      author: "Parth Jadhav",
+      handle: "@parth",
       content: content.trim(),
-      timestamp: 'Just now',
+      timestamp: "Just now",
       likes: 0,
       reposts: 0,
       replies: 0,
     };
-    setPosts([newPost, ...posts]);
+    setAwaazPosts([post, ...awaazPosts]);
   };
 
-  const likePost = (id: string) => {
-    setPosts(posts.map((p) => (p.id === id ? { ...p, likes: p.likes + 1 } : p)));
+  const likeAwaaz = (id: string) => {
+    setAwaazPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const isLiked = p.liked;
+        return {
+          ...p,
+          liked: !isLiked,
+          likes: isLiked ? p.likes - 1 : p.likes + 1,
+        };
+      })
+    );
   };
 
-  const displayedPosts = posts.filter((p) => p.mode === mode);
+  const likeVistaar = (id: string) => {
+    setVistaarItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const isLiked = item.liked;
+        return {
+          ...item,
+          liked: !isLiked,
+          likes: isLiked ? item.likes - 1 : item.likes + 1,
+        };
+      })
+    );
+  };
 
   return {
-    mode,
-    toggleMode,
-    isAwaaz: mode === 'awaaz',
-    charLimit: mode === 'awaaz' ? 600 : 2500,
-    displayedPosts,
-    addPost,
-    likePost,
+    activePillar,
+    setActivePillar,
+    vistaarTab,
+    setVistaarTab,
+    awaazPosts,
+    vistaarItems,
+    addAwaazPost,
+    likeAwaaz,
+    likeVistaar,
   };
 }
