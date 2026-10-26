@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+
+<script>
+  (() => {
+    try {
+      const savedTheme = localStorage.getItem('setu-theme');
+      const theme = savedTheme === 'light' || savedTheme === 'dark'
+        ? savedTheme
+        : window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light';
+
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.backgroundColor =
+        theme === 'dark' ? '#171a20' : '#f4f6fa';
+    } catch {
+      document.documentElement.dataset.theme = 'light';
+    }
+  })();
+</script>
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>setu-social</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
